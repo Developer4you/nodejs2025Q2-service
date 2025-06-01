@@ -1,35 +1,58 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { ArtistRepository } from './repositories/artist.repository';
 import { Artist } from './entities/artist.entity';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
+import { AlbumService } from '../album/album.service';
+import { TrackService } from '../track/track.service';
+import { FavoritesService } from '../favorites/favorites.service';
 
 @Injectable()
 export class ArtistService {
-    constructor(private readonly repository: ArtistRepository) {}
+  constructor(
+    private readonly repository: ArtistRepository,
+    @Inject(forwardRef(() => AlbumService))
+    private readonly albumService: AlbumService,
+    @Inject(forwardRef(() => TrackService))
+    private readonly trackService: TrackService,
+    @Inject(forwardRef(() => FavoritesService))
+    private readonly favoritesService: FavoritesService,
+  ) {}
 
-    findAll(): Artist[] {
-        return this.repository.findAll();
-    }
+  findAll(): Artist[] {
+    return this.repository.findAll();
+  }
 
-    findById(id: string): Artist {
-        const artist = this.repository.findById(id);
-        if (!artist) throw new NotFoundException('Artist not found');
-        return artist;
-    }
+  findById(id: string): Artist {
+    const artist = this.repository.findById(id);
+    if (!artist) throw new NotFoundException('Artist not found');
+    return artist;
+  }
 
-    create(dto: CreateArtistDto): Artist {
-        return this.repository.create(dto);
-    }
+  create(dto: CreateArtistDto): Artist {
+    return this.repository.create(dto);
+  }
 
-    update(id: string, dto: UpdateArtistDto): Artist {
-        const artist = this.repository.update(id, dto);
-        if (!artist) throw new NotFoundException('Artist not found');
-        return artist;
-    }
+  update(id: string, dto: UpdateArtistDto): Artist {
+    const artist = this.repository.update(id, dto);
+    if (!artist) throw new NotFoundException('Artist not found');
+    return artist;
+  }
 
-    delete(id: string): void {
-        const success = this.repository.delete(id);
-        if (!success) throw new NotFoundException('Artist not found');
-    }
+  delete(id: string): void {
+    this.favoritesService.removeArtist(id);
+
+    this.albumService.removeArtistReference(id);
+    this.trackService.removeArtistReference(id);
+
+    const exists = this.repository.findById(id);
+    if (!exists) throw new NotFoundException('Artist not found');
+
+    this.repository.delete(id);
+  }
 }
