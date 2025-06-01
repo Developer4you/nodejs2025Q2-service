@@ -1,6 +1,5 @@
 import {
   Injectable,
-  NotFoundException,
   UnprocessableEntityException,
   Inject,
   forwardRef,

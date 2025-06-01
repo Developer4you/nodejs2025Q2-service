@@ -11,7 +11,6 @@ export class ArtistRepository {
   }
 
   findById(id: string): Artist | undefined {
-    this.artists.forEach((e) => console.log('artists', e.id));
     return this.artists.find((a) => a.id === id);
   }
 

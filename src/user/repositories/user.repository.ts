@@ -57,6 +57,7 @@ export class UserRepository {
 
   private excludePassword(user: User): User {
     const { password, ...userWithoutPassword } = user;
+    void password;
     return new User(userWithoutPassword);
   }
 }

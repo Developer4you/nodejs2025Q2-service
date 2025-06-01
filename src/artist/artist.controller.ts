@@ -45,7 +45,6 @@ export class ArtistController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
   remove(@Param('id', new ParseUUIDPipe()) id: string) {
-    console.log('id', id);
     this.service.delete(id);
   }
 }
