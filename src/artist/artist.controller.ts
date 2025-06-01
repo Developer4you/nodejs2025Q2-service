@@ -29,6 +29,7 @@ export class ArtistController {
     }
 
     @Post()
+    @HttpCode(HttpStatus.CREATED) // 201 Created
     create(@Body() dto: CreateArtistDto) {
         return this.service.create(dto);
     }
@@ -42,8 +43,9 @@ export class ArtistController {
     }
 
     @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
+    @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
     remove(@Param('id', new ParseUUIDPipe()) id: string) {
+        console.log('id', id)
         this.service.delete(id);
     }
 }

@@ -31,8 +31,6 @@ export class UserService {
         if (!user) throw new NotFoundException('User not found');
 
         if (user.password !== dto.oldPassword) {
-            console.log('user.password', user.password);
-            console.log('dto.oldPassword', dto.oldPassword);
             throw new ForbiddenException('Old password is incorrect');
         }
 

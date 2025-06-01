@@ -46,8 +46,10 @@ export class TrackRepository {
     }
 
     removeArtistReference(artistId: string): void {
+        console.log('removeArtistReference')
         this.tracks = this.tracks.map(track => {
             if (track.artistId === artistId) {
+                console.log({...track, artistId: null})
                 return { ...track, artistId: null };
             }
             return track;
@@ -55,9 +57,11 @@ export class TrackRepository {
     }
 
     removeAlbumReference(albumId: string): void {
+        console.log('removeAlbumReference')
         this.tracks = this.tracks.map(track => {
             if (track.albumId === albumId) {
-                return { ...track, albumId: null };
+                console.log({...track, albumId: null})
+                return {...track, albumId: null};
             }
             return track;
         });

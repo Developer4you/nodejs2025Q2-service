@@ -1,7 +1,9 @@
 import {
     Injectable,
     NotFoundException,
-    BadRequestException
+    BadRequestException,
+    Inject,
+    forwardRef
 } from '@nestjs/common';
 import { TrackRepository } from './repositories/track.repository';
 import { Track } from './entities/track.entity';
@@ -9,13 +11,18 @@ import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { ArtistService } from '../artist/artist.service';
 import { AlbumService } from '../album/album.service';
+import { FavoritesService } from '../favorites/favorites.service';
 
 @Injectable()
 export class TrackService {
     constructor(
         private readonly repository: TrackRepository,
+        @Inject(forwardRef(() => ArtistService))
         private readonly artistService: ArtistService,
+        @Inject(forwardRef(() => AlbumService))
         private readonly albumService: AlbumService,
+        @Inject(forwardRef(() => FavoritesService))
+        private readonly favoritesService: FavoritesService,
     ) {}
 
     findAll(): Track[] {

@@ -29,6 +29,7 @@ export class AlbumController {
     }
 
     @Post()
+    @HttpCode(HttpStatus.CREATED) // 201 Created
     create(@Body() dto: CreateAlbumDto) {
         return this.service.create(dto);
     }
@@ -42,7 +43,7 @@ export class AlbumController {
     }
 
     @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
+    @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
     remove(@Param('id', new ParseUUIDPipe()) id: string) {
         this.service.delete(id);
     }

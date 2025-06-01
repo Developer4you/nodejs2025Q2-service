@@ -1,12 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    Injectable,
+    NotFoundException,
+    Inject,
+    forwardRef
+} from '@nestjs/common';
 import { ArtistRepository } from './repositories/artist.repository';
 import { Artist } from './entities/artist.entity';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
+import { AlbumService } from '../album/album.service';
+import { TrackService } from '../track/track.service';
+import { FavoritesService } from '../favorites/favorites.service';
+
 
 @Injectable()
 export class ArtistService {
-    constructor(private readonly repository: ArtistRepository) {}
+    constructor(
+        private readonly repository: ArtistRepository,
+        @Inject(forwardRef(() => AlbumService))
+        private readonly albumService: AlbumService,
+        @Inject(forwardRef(() => TrackService))
+        private readonly trackService: TrackService,
+        @Inject(forwardRef(() => FavoritesService))
+        private readonly favoritesService: FavoritesService,
+    ) {}
 
     findAll(): Artist[] {
         return this.repository.findAll();
@@ -29,7 +46,19 @@ export class ArtistService {
     }
 
     delete(id: string): void {
-        const success = this.repository.delete(id);
-        if (!success) throw new NotFoundException('Artist not found');
+        console.log('artist.service.delete')
+        // Удалить из избранного
+        this.favoritesService.removeArtist(id);
+
+        // Обновить связанные сущности
+        this.albumService.removeArtistReference(id);
+        this.trackService.removeArtistReference(id);
+
+        // Удалить артиста
+        console.log('const exists = this.repository.findById(id);')
+        const exists = this.repository.findById(id);
+        if (!exists) throw new NotFoundException('Artist not found');
+
+        this.repository.delete(id); // Просто удаляем без возврата значения
     }
 }
