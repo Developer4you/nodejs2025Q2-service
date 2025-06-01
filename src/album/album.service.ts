@@ -61,13 +61,10 @@ export class AlbumService {
   }
 
   delete(id: string): void {
-    // Удалить из избранного
     this.favoritesService.removeAlbum(id);
 
-    // Обновить связанные треки
     this.trackService.removeAlbumReference(id);
 
-    // Удалить альбом
     const success = this.repository.delete(id);
     if (!success) throw new NotFoundException('Album not found');
   }

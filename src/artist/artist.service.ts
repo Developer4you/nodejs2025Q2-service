@@ -45,14 +45,11 @@ export class ArtistService {
   }
 
   delete(id: string): void {
-    // Удалить из избранного
     this.favoritesService.removeArtist(id);
 
-    // Обновить связанные сущности
     this.albumService.removeArtistReference(id);
     this.trackService.removeArtistReference(id);
 
-    // Удалить артиста
     const exists = this.repository.findById(id);
     if (!exists) throw new NotFoundException('Artist not found');
 
