@@ -7,16 +7,13 @@ import { AlbumModule } from '../album/album.module';
 import { FavoritesModule } from '../favorites/favorites.module';
 
 @Module({
-    imports: [
-        forwardRef(() => ArtistModule),
-        forwardRef(() => AlbumModule),
-        forwardRef(() => FavoritesModule),
-    ],
-    controllers: [TrackController],
-    providers: [
-        TrackService,
-        TrackRepository,
-    ],
-    exports: [TrackService, TrackRepository],
+  imports: [
+    forwardRef(() => ArtistModule),
+    forwardRef(() => AlbumModule),
+    forwardRef(() => FavoritesModule),
+  ],
+  controllers: [TrackController],
+  providers: [TrackService, TrackRepository],
+  exports: [TrackService, TrackRepository],
 })
 export class TrackModule {}
