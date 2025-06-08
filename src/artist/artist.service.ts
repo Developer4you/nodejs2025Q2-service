@@ -1,4 +1,5 @@
 import {
+  forwardRef, Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -16,7 +17,9 @@ export class ArtistService {
   constructor(
       @InjectRepository(Artist)
       private readonly artistRepository: Repository<Artist>,
+      @Inject(forwardRef(() => AlbumService))
       private readonly albumService: AlbumService,
+      @Inject(forwardRef(() => TrackService))
       private readonly trackService: TrackService,
       private readonly favoritesService: FavoritesService,
   ) {}

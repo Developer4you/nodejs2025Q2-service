@@ -1,7 +1,7 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException,
+  BadRequestException, forwardRef, Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {DeepPartial, Repository} from 'typeorm';
@@ -18,7 +18,9 @@ export class TrackService {
   constructor(
       @InjectRepository(Track)
       private readonly trackRepository: Repository<Track>,
+      @Inject(forwardRef(() => ArtistService))
       private readonly artistService: ArtistService,
+      @Inject(forwardRef(() => AlbumService))
       private readonly albumService: AlbumService,
       private readonly favoritesService: FavoritesService,
   ) {}
