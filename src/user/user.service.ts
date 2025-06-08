@@ -3,42 +3,60 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { UserRepository } from './repositories/user.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly repository: UserRepository) {}
+  constructor(
+      @InjectRepository(User)
+      private readonly userRepository: Repository<User>,
+  ) {}
 
-  create(dto: CreateUserDto): User {
-    return this.repository.create(dto);
+  async create(dto: CreateUserDto): Promise<User> {
+    const user = this.userRepository.create({
+      ...dto,
+      password: await bcrypt.hash(dto.password, 10),
+      version: 1,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    return this.userRepository.save(user);
   }
 
-  findAll(): User[] {
-    return this.repository.findAll();
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find();
   }
 
-  findById(id: string): User {
-    const user = this.repository.findById(id);
+  async findById(id: string): Promise<User> {
+    const user = await this.userRepository.findOneBy({ id });
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
-  updatePassword(id: string, dto: UpdatePasswordDto): User {
-    const user = this.repository.findByIdWithPassword(id);
+  async updatePassword(id: string, dto: UpdatePasswordDto): Promise<User> {
+    const user = await this.userRepository.findOneBy({ id });
     if (!user) throw new NotFoundException('User not found');
 
-    if (user.password !== dto.oldPassword) {
-      throw new ForbiddenException('Old password is incorrect');
-    }
+    const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
+    if (!isMatch) throw new ForbiddenException('Old password is incorrect');
 
-    return this.repository.updatePassword(id, dto.newPassword);
+    user.password = await bcrypt.hash(dto.newPassword, 10);
+    user.version += 1;
+    user.updatedAt = Date.now();
+
+    return this.userRepository.save(user);
   }
 
-  delete(id: string): void {
-    const success = this.repository.delete(id);
-    if (!success) throw new NotFoundException('User not found');
+  async delete(id: string): Promise<void> {
+    const result = await this.userRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('User not found');
+    }
   }
 }

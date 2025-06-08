@@ -9,6 +9,11 @@ services:
       - "4000:4000"
     environment:
       PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: library
     networks:
       - library-network
     depends_on:

@@ -2,91 +2,106 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
-import { TrackRepository } from './repositories/track.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import {DeepPartial, Repository} from 'typeorm';
 import { Track } from './entities/track.entity';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { ArtistService } from '../artist/artist.service';
 import { AlbumService } from '../album/album.service';
 import { FavoritesService } from '../favorites/favorites.service';
+import {QueryDeepPartialEntity} from "typeorm/query-builder/QueryPartialEntity";
 
 @Injectable()
 export class TrackService {
   constructor(
-    private readonly repository: TrackRepository,
-    @Inject(forwardRef(() => ArtistService))
-    private readonly artistService: ArtistService,
-    @Inject(forwardRef(() => AlbumService))
-    private readonly albumService: AlbumService,
-    @Inject(forwardRef(() => FavoritesService))
-    private readonly favoritesService: FavoritesService,
+      @InjectRepository(Track)
+      private readonly trackRepository: Repository<Track>,
+      private readonly artistService: ArtistService,
+      private readonly albumService: AlbumService,
+      private readonly favoritesService: FavoritesService,
   ) {}
 
-  findAll(): Track[] {
-    return this.repository.findAll();
+  async findAll(): Promise<Track[]> {
+    return this.trackRepository.find();
   }
 
-  findById(id: string): Track {
-    const track = this.repository.findById(id);
+  async findById(id: string): Promise<Track> {
+    const track = await this.trackRepository.findOneBy({ id });
     if (!track) throw new NotFoundException('Track not found');
     return track;
   }
 
   async create(dto: CreateTrackDto): Promise<Track> {
     if (dto.artistId) {
-      try {
-        await this.artistService.findById(dto.artistId);
-      } catch {
-        throw new BadRequestException('Artist not found');
-      }
+      await this.validateArtistExists(dto.artistId);
     }
 
     if (dto.albumId) {
-      try {
-        await this.albumService.findById(dto.albumId);
-      } catch {
-        throw new BadRequestException('Album not found');
-      }
+      await this.validateAlbumExists(dto.albumId);
     }
 
-    return this.repository.create(dto);
+    const track = this.trackRepository.create(dto);
+    return this.trackRepository.save(track);
   }
 
   async update(id: string, dto: UpdateTrackDto): Promise<Track> {
     if (dto.artistId) {
-      try {
-        await this.artistService.findById(dto.artistId);
-      } catch {
-        throw new BadRequestException('Artist not found');
-      }
+      await this.validateArtistExists(dto.artistId);
     }
 
     if (dto.albumId) {
-      try {
-        await this.albumService.findById(dto.albumId);
-      } catch {
-        throw new BadRequestException('Album not found');
-      }
+      await this.validateAlbumExists(dto.albumId);
     }
 
-    const updatedTrack = this.repository.update(id, dto);
-    if (!updatedTrack) throw new NotFoundException('Track not found');
-    return updatedTrack;
+    const track = await this.trackRepository.preload(dto as DeepPartial<Track> & { id: string });
+
+    if (!track) throw new NotFoundException('Track not found');
+
+    return this.trackRepository.save(track);
   }
 
-  delete(id: string): void {
-    const success = this.repository.delete(id);
-    if (!success) throw new NotFoundException('Track not found');
+  async delete(id: string): Promise<void> {
+    const result = await this.trackRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('Track not found');
+    }
+
+    await this.favoritesService.removeTrack(id);
   }
 
-  removeArtistReference(artistId: string): void {
-    this.repository.removeArtistReference(artistId);
+  async removeArtistReference(artistId: string): Promise<void> {
+    await this.trackRepository
+        .createQueryBuilder()
+        .update(Track)
+        .set({ artistId: null } as QueryDeepPartialEntity<Track>)
+        .where('artistId = :artistId', { artistId })
+        .execute();
   }
 
-  removeAlbumReference(albumId: string): void {
-    this.repository.removeAlbumReference(albumId);
+  async removeAlbumReference(albumId: string): Promise<void> {
+    await this.trackRepository
+        .createQueryBuilder()
+        .update(Track)
+        .set({ artistId: null } as QueryDeepPartialEntity<Track>)
+        .where('albumId = :albumId', { albumId })
+        .execute();
+  }
+
+  private async validateArtistExists(artistId: string): Promise<void> {
+    try {
+      await this.artistService.findById(artistId);
+    } catch {
+      throw new BadRequestException('Artist not found');
+    }
+  }
+
+  private async validateAlbumExists(albumId: string): Promise<void> {
+    try {
+      await this.albumService.findById(albumId);
+    } catch {
+      throw new BadRequestException('Album not found');
+    }
   }
 }

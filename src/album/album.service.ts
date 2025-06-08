@@ -2,10 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
-import { AlbumRepository } from './repositories/album.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import {DeepPartial, Repository} from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { Album } from './entities/album.entity';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
@@ -16,60 +16,68 @@ import { FavoritesService } from '../favorites/favorites.service';
 @Injectable()
 export class AlbumService {
   constructor(
-    private readonly repository: AlbumRepository,
-    @Inject(forwardRef(() => ArtistService))
-    private readonly artistService: ArtistService,
-    @Inject(forwardRef(() => TrackService))
-    private readonly trackService: TrackService,
-    @Inject(forwardRef(() => FavoritesService))
-    private readonly favoritesService: FavoritesService,
+      @InjectRepository(Album)
+      private readonly albumRepository: Repository<Album>,
+      private readonly artistService: ArtistService,
+      private readonly trackService: TrackService,
+      private readonly favoritesService: FavoritesService,
   ) {}
 
-  findAll(): Album[] {
-    return this.repository.findAll();
+  async findAll(): Promise<Album[]> {
+    return this.albumRepository.find();
   }
 
-  findById(id: string): Album {
-    const album = this.repository.findById(id);
+  async findById(id: string): Promise<Album> {
+    const album = await this.albumRepository.findOneBy({ id });
     if (!album) throw new NotFoundException('Album not found');
     return album;
   }
 
   async create(dto: CreateAlbumDto): Promise<Album> {
     if (dto.artistId) {
-      try {
-        await this.artistService.findById(dto.artistId);
-      } catch {
-        throw new BadRequestException('Artist not found');
-      }
+      await this.validateArtistExists(dto.artistId);
     }
-    return this.repository.create(dto);
+
+    const album = this.albumRepository.create(dto);
+    return this.albumRepository.save(album);
   }
 
   async update(id: string, dto: UpdateAlbumDto): Promise<Album> {
     if (dto.artistId) {
-      try {
-        await this.artistService.findById(dto.artistId);
-      } catch {
-        throw new BadRequestException('Artist not found');
-      }
+      await this.validateArtistExists(dto.artistId);
     }
 
-    const updatedAlbum = this.repository.update(id, dto);
-    if (!updatedAlbum) throw new NotFoundException('Album not found');
-    return updatedAlbum;
+    const album = await this.albumRepository.preload(dto as DeepPartial<Album> & { id: string });
+
+    if (!album) throw new NotFoundException('Album not found');
+
+    return this.albumRepository.save(album);
   }
 
-  delete(id: string): void {
-    this.favoritesService.removeAlbum(id);
+  async delete(id: string): Promise<void> {
+    const album = await this.albumRepository.findOneBy({ id });
+    if (!album) throw new NotFoundException('Album not found');
 
-    this.trackService.removeAlbumReference(id);
+    await this.favoritesService.removeAlbum(id);
+    await this.trackService.removeAlbumReference(id);
 
-    const success = this.repository.delete(id);
-    if (!success) throw new NotFoundException('Album not found');
+    await this.albumRepository.delete(id);
   }
 
-  removeArtistReference(artistId: string): void {
-    this.repository.removeArtistReference(artistId);
+  async removeArtistReference(artistId: string): Promise<void> {
+    await this.albumRepository
+        .createQueryBuilder()
+        .update(Album)
+        .set({ artistId: null } as QueryDeepPartialEntity<Album>)
+        .where('artistId = :artistId', { artistId })
+        .execute();
+  }
+
+  private async validateArtistExists(artistId: string): Promise<void> {
+    try {
+      await this.artistService.findById(artistId);
+    } catch {
+      throw new BadRequestException('Artist not found');
+    }
   }
 }

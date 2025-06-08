@@ -1,13 +1,13 @@
 FROM node:22-alpine
 
-RUN apk add --no-cache tini && \
-    npm install -g @nestjs/cli
+RUN apk add --no-cache tini
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm ci --include=dev
+RUN npm install -g @nestjs/cli && \
+    npm ci --include=dev
 
 COPY . .
 
