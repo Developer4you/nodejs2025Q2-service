@@ -20,6 +20,9 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    volumes:
+      - ./src:/usr/src/app/src
+    command: nodemon --exec "npm run start:dev"
 
   db:
     build:

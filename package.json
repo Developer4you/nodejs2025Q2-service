@@ -9,6 +9,7 @@
     "node": ">=22.14.0"
   },
   "scripts": {
+    "audit": "npm audit",
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

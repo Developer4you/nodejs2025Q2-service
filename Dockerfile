@@ -7,8 +7,8 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 RUN npm install -g @nestjs/cli && \
-    npm ci --include=dev \
-    npm install -g nodemon
+    npm ci --include=dev
+RUN npm install -g nodemon
 
 COPY . .
 
