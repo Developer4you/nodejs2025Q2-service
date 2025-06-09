@@ -8,7 +8,7 @@ COPY package*.json ./
 
 RUN npm install -g @nestjs/cli && \
     npm ci --include=dev
-RUN npm install -g nodemon
+RUN npm run audit:fix || true
 
 COPY . .
 
