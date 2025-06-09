@@ -1,72 +1,180 @@
 # Home Library Service
 
-## Prerequisites
+**Node.js 2025 Q2 REST Service project**
 
-- Git - [Download & Install Git](https://git-scm.com/downloads).
-- Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
+## 📚 Description
 
-## Downloading
+This is a RESTful web service built with **NestJS** that allows users to manage their home music library. 
 
-```
-git clone {repository URL}
-```
+# Home Library Service
 
-## Installing NPM modules
+## Description
 
-```
-npm install
-```
+The Home Library Service is a music library management system that allows you to manage your music collection. You can work with artists, albums, tracks, and create your favorites list.
 
-## Running application
+## Running the application
 
-```
-npm start
+1. Clone this repository:
+```bash
+git clone <repository-url>
+cd <repository-name>
 ```
 
-After starting the app on port (4000 as default) you can open
-in your browser OpenAPI documentation by typing http://localhost:4000/doc/.
-For more information about OpenAPI/Swagger please visit https://swagger.io/.
-
-## Testing
-
-After application running open new terminal and enter:
-
-To run all tests without authorization
-
-```
-npm run test
+2. Check a `.env` file in the root directory with the following environment variables:
+```env
+PORT=4000
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 ```
 
-To run only one of all test suites
+Environment variables description:
+- PORT: The port on which the application will run (default: 4000)
+- POSTGRES_HOST: The hostname of the Postgres database (default: postgres)
+- POSTGRES_PORT: The port number of the Postgres database (default: 5432)
+- POSTGRES_USER: The username for accessing the Postgres database
+- POSTGRES_PASSWORD: The password for accessing the Postgres database
 
-```
-npm run test -- <path to suite>
-```
+Note: The database name will be automatically set to the same value as POSTGRES_USER.
 
-To run all test with authorization
-
-```
-npm run test:auth
-```
-
-To run only specific test suite with authorization
-
-```
-npm run test:auth -- <path to suite>
+3. Build and start the application:
+```bash
+docker compose build
+docker compose up
 ```
 
-### Auto-fix and format
+By default, the application will run on port 4000, in development mode, so it will automatically restart when you make changes to the code in the `src` directory.
 
-```
-npm run lint
-```
-
-```
-npm run format
+4. To stop the application:
+```bash
+docker compose down
 ```
 
-### Debugging in VSCode
+Users can manage entities such as:
 
-Press <kbd>F5</kbd> to debug.
+- Users
+- Artists
+- Albums
+- Tracks
+- Favorites
 
-For more information, visit: https://code.visualstudio.com/docs/editor/debugging
+## 🚦 API Endpoints
+
+### 👤 Users (`/user`)
+
+- `GET /user` — get all users
+- `GET /user/:id` — get user by ID
+- `POST /user` — create a user  
+  **Body**:
+  ```ts
+  { login: string; password: string; }
+  ```
+- `PUT /user/:id` — update user password  
+  **Body**:
+  ```ts
+  { oldPassword: string; newPassword: string; }
+  ```
+- `DELETE /user/:id` — delete user
+
+### 🎤 Artists (`/artist`)
+
+- `GET /artist`
+- `GET /artist/:id`
+- `POST /artist`  
+  **Body**:
+  ```ts
+  { name: string; grammy: boolean; }
+  ```
+- `PUT /artist/:id`
+- `DELETE /artist/:id`
+
+### 💿 Albums (`/album`)
+
+- `GET /album`
+- `GET /album/:id`
+- `POST /album`  
+  **Body**:
+  ```ts
+  { name: string; year: number; artistId: string | null; }
+  ```
+- `PUT /album/:id`
+- `DELETE /album/:id`
+
+### 🎶 Tracks (`/track`)
+
+- `GET /track`
+- `GET /track/:id`
+- `POST /track`  
+  **Body**:
+  ```ts
+  {
+    name: string;
+    artistId: string | null;
+    albumId: string | null;
+    duration: number;
+  }
+  ```
+- `PUT /track/:id`
+- `DELETE /track/:id`
+
+### ⭐ Favorites (`/favs`)
+
+- `GET /favs` — get all favorites
+- `POST /favs/track/:id` — add track to favorites
+- `DELETE /favs/track/:id` — remove track from favorites
+- `POST /favs/album/:id` — add album to favorites
+- `DELETE /favs/album/:id` — remove album from favorites
+- `POST /favs/artist/:id` — add artist to favorites
+- `DELETE /favs/artist/:id` — remove artist from favorites
+
+---
+
+## 📐 Entity Interfaces
+
+```ts
+interface User {
+  id: string;
+  login: string;
+  password: string;
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface Artist {
+  id: string;
+  name: string;
+  grammy: boolean;
+}
+
+interface Album {
+  id: string;
+  name: string;
+  year: number;
+  artistId: string | null;
+}
+
+interface Track {
+  id: string;
+  name: string;
+  artistId: string | null;
+  albumId: string | null;
+  duration: number;
+}
+
+interface Favorites {
+  artists: string[];
+  albums: string[];
+  tracks: string[];
+}
+```
+
+---
+
+## ✅ Validation and Status Codes
+
+- All `:id` parameters must be valid UUID v4.
+- Proper `400`, `403`, `404`, `422` and `201/200/204` status codes are returned according to the endpoint rules.
+
+---
