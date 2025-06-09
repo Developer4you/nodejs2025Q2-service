@@ -1,3 +1,7 @@
+ARG DOCKERHUB_USERNAME=developer4you
+ARG APP_NAME=home-library
+ARG APP_VERSION=1.0.0
+
 FROM node:22-alpine
 
 RUN apk add --no-cache tini
@@ -18,3 +22,5 @@ EXPOSE 4000
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/main.js"]
+
+LABEL org.opencontainers.image.source="https://github.com/developer4you/home-library"

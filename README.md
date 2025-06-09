@@ -4,46 +4,60 @@
 
 ## 📚 Description
 
-This is a RESTful web service built with **NestJS** that allows users to manage their home music library. Users can manage entities such as:
+This is a RESTful web service built with **NestJS** that allows users to manage their home music library. 
+
+# Home Library Service
+
+## Description
+
+The Home Library Service is a music library management system that allows you to manage your music collection. You can work with artists, albums, tracks, and create your favorites list.
+
+## Running the application
+
+1. Clone this repository:
+```bash
+git clone <repository-url>
+cd <repository-name>
+```
+
+2. Check a `.env` file in the root directory with the following environment variables:
+```env
+PORT=4000
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+```
+
+Environment variables description:
+- PORT: The port on which the application will run (default: 4000)
+- POSTGRES_HOST: The hostname of the Postgres database (default: postgres)
+- POSTGRES_PORT: The port number of the Postgres database (default: 5432)
+- POSTGRES_USER: The username for accessing the Postgres database
+- POSTGRES_PASSWORD: The password for accessing the Postgres database
+
+Note: The database name will be automatically set to the same value as POSTGRES_USER.
+
+3. Build and start the application:
+```bash
+docker compose build
+docker compose up
+```
+
+By default, the application will run on port 4000, in development mode, so it will automatically restart when you make changes to the code in the `src` directory.
+
+4. To stop the application:
+```bash
+docker compose down
+```
+
+Users can manage entities such as:
 
 - Users
 - Artists
 - Albums
 - Tracks
 - Favorites
-
-The application supports full CRUD operations and provides endpoints to mark/unmark entities as favorites.
-
----
-
-## 📦 Installation
-
-1. **Clone the repository**
-
-2. **Install dependencies**:
-
-```bash
-npm install
-```
-
-3. **Run the application**:
-
-```bash
-npm start
-```
-
-The server will start on `http://localhost:4000`
-
----
-
-## 🧪 Scripts
-
-- `npm start` — starts the application
-- `npm run lint` — runs ESLint with auto-fix
-- `npm test` — runs Jest tests once
-- `npm run test:watch` — runs Jest tests in watch mode
-
----
 
 ## 🚦 API Endpoints
 
