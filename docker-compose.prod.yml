@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: development
+      target: production
     ports:
       - "${PORT}:${PORT}"
     environment:
@@ -21,8 +21,7 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
-    volumes:
-      - ./src:/app/src
+    command: node dist/main.js
 
   db:
     build:
