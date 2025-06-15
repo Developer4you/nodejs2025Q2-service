@@ -44,7 +44,7 @@ export class AlbumController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT) // 204 No Content
-  remove(@Param('id', new ParseUUIDPipe()) id: string) {
-    this.service.delete(id);
+  async remove(@Param('id', new ParseUUIDPipe()) id: string) {
+    await this.service.delete(id);
   }
 }

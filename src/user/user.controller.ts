@@ -13,14 +13,25 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import {UserResponseDto} from "./dto/user-response.dto";
+import {response} from "express";
 
 @Controller('user')
 export class UserController {
   constructor(private readonly service: UserService) {}
 
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.service.create(dto);
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() dto: CreateUserDto) {
+    const user = await this.service.create(dto);
+
+    return {
+      id: user.id,
+      login: user.login,
+      version: user.version,
+      createdAt: Number(user.createdAt),
+      updatedAt: Number(user.updatedAt)
+    };
   }
 
   @Get()
@@ -34,16 +45,17 @@ export class UserController {
   }
 
   @Put(':id')
-  update(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: UpdatePasswordDto,
+  async update(
+      @Param('id', new ParseUUIDPipe()) id: string,
+      @Body() dto: UpdatePasswordDto,
   ) {
-    return this.service.updatePassword(id, dto);
+    const user = await this.service.updatePassword(id, dto);
+    return new UserResponseDto(user); // Просто возвращаем DTO
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', new ParseUUIDPipe()) id: string) {
-    this.service.delete(id);
+  async remove(@Param('id', new ParseUUIDPipe()) id: string) {
+    await this.service.delete(id);
   }
 }
