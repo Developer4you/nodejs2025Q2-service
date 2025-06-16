@@ -4,17 +4,13 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingService } from './logging/logging.service';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
-import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const loggingService = app.get(LoggingService);
 
-
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    const requestLogger = app.get(RequestLoggerMiddleware);
-    requestLogger.use(req, res, next);
-  });
+  const requestLoggerMiddleware = app.get(RequestLoggerMiddleware);
+  app.use(requestLoggerMiddleware.use.bind(requestLoggerMiddleware));
 
   app.useGlobalPipes(
       new ValidationPipe({
@@ -42,7 +38,12 @@ async function bootstrap() {
     loggingService.error('Unhandled Rejection', reason);
   });
 
+  app.use((req, res, next) => {
+    loggingService.log(`Incoming request: ${req.method} ${req.url}`);
+    next();
+  });
+
   await app.listen(process.env.PORT || 4000);
 }
-
+console.log('dsvdd')
 bootstrap();

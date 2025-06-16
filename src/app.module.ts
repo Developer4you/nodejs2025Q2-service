@@ -16,14 +16,18 @@ import {AuthModule} from "./auth/auth.module";
 import { PassportModule } from '@nestjs/passport';
 import {LoggingService} from "./logging/logging.service";
 import {HttpExceptionFilter} from "./common/filters/http-exception.filter";
-import {JwtModule} from "@nestjs/jwt";
 import {JwtAuthGuard} from "./auth/guards/jwt-auth.guard";
-import {APP_FILTER, APP_GUARD} from "@nestjs/core";
+import {APP_FILTER, APP_GUARD, Reflector} from "@nestjs/core";
+import {CommonModule} from "./common/common.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      wildcard: true,
+      delimiter: '.',
+      maxListeners: 20,
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -36,17 +40,20 @@ import {APP_FILTER, APP_GUARD} from "@nestjs/core";
         database: config.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
-      }),
-    }),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET_KEY'),
-        signOptions: { expiresIn: config.get('TOKEN_EXPIRE_TIME') },
-      }),
+        logging: true,
+        extra: { // Добавляем настройки пула соединений
+          max: 20, // максимальное количество соединений в пуле
+          connectionTimeoutMillis: 5000, // таймаут подключения (5 секунд)
+          idleTimeoutMillis: 10000, // время бездействия перед закрытием (10 секунд)
+        },
+        poolErrorHandler: (err: any) => { // обработчик ошибок пула
+          const loggingService = new LoggingService();
+          loggingService.error('Database pool error', err.stack);
+        }
+      } as TypeOrmModuleOptions),
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    CommonModule,
     AuthModule,
     UserModule,
     ArtistModule,
@@ -55,6 +62,7 @@ import {APP_FILTER, APP_GUARD} from "@nestjs/core";
     FavoritesModule,
   ],
   providers: [
+    Reflector,
     LoggingService,
     {
       provide: APP_FILTER,

@@ -14,7 +14,6 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import {UserResponseDto} from "./dto/user-response.dto";
-import {response} from "express";
 import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('user')
