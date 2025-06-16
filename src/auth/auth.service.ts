@@ -44,7 +44,7 @@ export class AuthService {
 
         try {
             const payload = this.jwtService.verify(refreshToken, {
-                secret: this.configService.get('JWT_REFRESH_SECRET'),
+                secret: this.configService.get('JWT_SECRET_REFRESH_KEY'),
             });
 
             await this.tokenRepository.delete({ refreshToken });
@@ -63,23 +63,22 @@ export class AuthService {
         const accessToken = this.jwtService.sign(
             { userId, login },
             {
-                expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN'),
-                secret: this.configService.get('JWT_ACCESS_SECRET'),
+                expiresIn: this.configService.get('TOKEN_EXPIRE_TIME'),
+                secret: this.configService.get('JWT_SECRET_KEY'),
             },
         );
 
         const refreshToken = this.jwtService.sign(
             { userId, login },
             {
-                expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
-                secret: this.configService.get('JWT_REFRESH_SECRET'),
+                expiresIn: this.configService.get('TOKEN_REFRESH_EXPIRE_TIME'),
+                secret: this.configService.get('JWT_SECRET_REFRESH_KEY'),
             },
         );
 
         const expiresAt = Date.now() +
-            parseInt(this.configService.get('JWT_REFRESH_EXPIRES_IN')) * 1000;
+            parseInt(this.configService.get('TOKEN_REFRESH_EXPIRE_TIME')) * 1000;
 
-        // Use userService instead of userRepository
         const user = await this.userService.findById(userId);
 
         const token = this.tokenRepository.create({

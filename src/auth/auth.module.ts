@@ -1,4 +1,3 @@
-// src/auth/auth.module.ts
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -16,9 +15,9 @@ import { Token } from './entities/token.entity';
             imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: (config: ConfigService) => ({
-                secret: config.get('JWT_ACCESS_SECRET'),
+                secret: config.get('JWT_SECRET_KEY'),
                 signOptions: {
-                    expiresIn: config.get('JWT_ACCESS_EXPIRES_IN'),
+                    expiresIn: config.get('TOKEN_EXPIRE_TIME'),
                 },
             }),
         }),

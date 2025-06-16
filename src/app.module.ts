@@ -42,8 +42,8 @@ import {APP_FILTER, APP_GUARD} from "@nestjs/core";
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_ACCESS_SECRET'),
-        signOptions: { expiresIn: config.get('JWT_ACCESS_EXPIRES_IN') },
+        secret: config.get('JWT_SECRET_KEY'),
+        signOptions: { expiresIn: config.get('TOKEN_EXPIRE_TIME') },
       }),
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
