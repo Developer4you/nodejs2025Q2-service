@@ -15,11 +15,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import {UserResponseDto} from "./dto/user-response.dto";
 import {response} from "express";
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly service: UserService) {}
 
+  @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateUserDto) {
@@ -50,7 +52,7 @@ export class UserController {
       @Body() dto: UpdatePasswordDto,
   ) {
     const user = await this.service.updatePassword(id, dto);
-    return new UserResponseDto(user); // Просто возвращаем DTO
+    return new UserResponseDto(user);
   }
 
   @Delete(':id')

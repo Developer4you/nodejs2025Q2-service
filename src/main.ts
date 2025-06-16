@@ -1,29 +1,46 @@
-import {NestFactory, Reflector} from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import {BadRequestException, ClassSerializerInterceptor, ValidationPipe} from '@nestjs/common';
-import {HttpExceptionFilter} from "./common/filters/http-exception.filter";
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { LoggingService } from './logging/logging.service';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const loggingService = app.get(LoggingService);
 
-  app.useGlobalInterceptors(
-      new ClassSerializerInterceptor(app.get(Reflector))
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const requestLogger = app.get(RequestLoggerMiddleware);
+    requestLogger.use(req, res, next);
+  });
+
+  app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        exceptionFactory: (errors) => {
+          return new BadRequestException({
+            message: 'Validation error',
+            errors: errors.map((err) => ({
+              property: err.property,
+              constraints: err.constraints,
+            })),
+          });
+        },
+      }),
   );
 
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    exceptionFactory: (errors) => {
-      return new BadRequestException({
-        message: 'Validation error',
-        errors: errors.map(err => ({
-          property: err.property,
-          constraints: err.constraints,
-        })),
-      });
-    }
-  }));
+  app.useGlobalFilters(new HttpExceptionFilter(loggingService));
 
-  app.useGlobalFilters(new HttpExceptionFilter());
+  process.on('uncaughtException', (error) => {
+    loggingService.error('Uncaught Exception', error.stack);
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason: any) => {
+    loggingService.error('Unhandled Rejection', reason);
+  });
 
   await app.listen(process.env.PORT || 4000);
 }

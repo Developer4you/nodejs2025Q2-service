@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Token } from '../auth/entities/token.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -33,4 +34,7 @@ export class User {
     },
   })
   updatedAt: number;
+
+  @OneToMany(() => Token, (token) => token.user)
+  refreshTokens: Token[];
 }

@@ -21,7 +21,7 @@ export class AlbumService {
       @InjectRepository(Album)
       private readonly albumRepository: Repository<Album>,
       @InjectRepository(Artist)
-      private readonly artistRepository: Repository<Artist>, // Добавлен репозиторий Artist
+      private readonly artistRepository: Repository<Artist>,
       private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -51,15 +51,12 @@ export class AlbumService {
       await this.validateArtistExists(dto.artistId);
     }
 
-    // Находим существующий альбом
     const album = await this.albumRepository.findOneBy({ id });
     if (!album) throw new NotFoundException('Album not found');
 
-    // Обновляем поля
     album.name = dto.name;
     album.year = dto.year;
 
-    // Обрабатываем artistId отдельно (может быть null)
     if (dto.artistId !== undefined) {
       album.artistId = dto.artistId;
     }
@@ -72,7 +69,6 @@ export class AlbumService {
     const album = await this.albumRepository.findOneBy({ id });
     if (!album) throw new NotFoundException('Album not found');
 
-    // Генерируем событие перед удалением
     this.eventEmitter.emit('album.deleted', new AlbumDeletedEvent(id));
 
     await this.albumRepository.delete(id);

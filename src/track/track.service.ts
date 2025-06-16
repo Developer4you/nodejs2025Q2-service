@@ -14,17 +14,17 @@ import { AlbumDeletedEvent } from '../events/album-deleted.event';
 import { TrackDeletedEvent } from '../events/track-deleted.event';
 import { OnEvent } from '@nestjs/event-emitter';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { Artist } from '../artist/artist.entity'; // Добавлен импорт
-import { Album } from '../album/album.entity'; // Добавлен импорт
+import { Artist } from '../artist/artist.entity';
+import { Album } from '../album/album.entity';
 
 @Injectable()
 export class TrackService {
   constructor(
       @InjectRepository(Track)
       private readonly trackRepository: Repository<Track>,
-      @InjectRepository(Artist) // Добавлен репозиторий Artist
+      @InjectRepository(Artist)
       private readonly artistRepository: Repository<Artist>,
-      @InjectRepository(Album) // Добавлен репозиторий Album
+      @InjectRepository(Album)
       private readonly albumRepository: Repository<Album>,
       private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -53,31 +53,28 @@ export class TrackService {
   }
 
   async update(id: string, dto: UpdateTrackDto): Promise<Track> {
-    // Находим существующий трек
+
     const track = await this.trackRepository.findOneBy({ id });
     if (!track) throw new NotFoundException('Track not found');
 
-    // Валидируем и обновляем artistId
     if (dto.artistId !== undefined) {
       if (dto.artistId) {
         await this.validateArtistExists(dto.artistId);
         track.artistId = dto.artistId;
       } else {
-        track.artistId = null; // Если передано явное null
+        track.artistId = null;
       }
     }
 
-    // Валидируем и обновляем albumId
     if (dto.albumId !== undefined) {
       if (dto.albumId) {
         await this.validateAlbumExists(dto.albumId);
         track.albumId = dto.albumId;
       } else {
-        track.albumId = null; // Если передано явное null
+        track.albumId = null;
       }
     }
 
-    // Обновляем остальные поля
     if (dto.name !== undefined) {
       track.name = dto.name;
     }
@@ -93,7 +90,6 @@ export class TrackService {
     const track = await this.trackRepository.findOneBy({ id });
     if (!track) throw new NotFoundException('Track not found');
 
-    // Генерируем событие перед удалением
     this.eventEmitter.emit('track.deleted', new TrackDeletedEvent(id));
 
     await this.trackRepository.delete(id);

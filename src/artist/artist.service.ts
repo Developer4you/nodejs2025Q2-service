@@ -47,7 +47,6 @@ export class ArtistService {
     const artist = await this.artistRepository.findOneBy({ id });
     if (!artist) throw new NotFoundException('Artist not found');
 
-    // Генерируем событие перед удалением
     this.eventEmitter.emit('artist.deleted', new ArtistDeletedEvent(id));
 
     await this.artistRepository.delete(id);

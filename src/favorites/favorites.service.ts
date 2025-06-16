@@ -8,11 +8,6 @@ import { Artist } from '../artist/artist.entity';
 import { Album } from '../album/album.entity';
 import { Track } from '../track/track.entity';
 import { Favorites } from './favorites.entity';
-// import { EventEmitter2 } from '@nestjs/event-emitter';
-// import { OnEvent } from '@nestjs/event-emitter';
-// import { ArtistDeletedEvent } from '../events/artist-deleted.event';
-// import { AlbumDeletedEvent } from '../events/album-deleted.event';
-// import { TrackDeletedEvent } from '../events/track-deleted.event';
 
 @Injectable()
 export class FavoritesService {
@@ -25,7 +20,6 @@ export class FavoritesService {
       private readonly albumRepository: Repository<Album>,
       @InjectRepository(Track)
       private readonly trackRepository: Repository<Track>,
-      // private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private async getOrCreateFavorites() {
@@ -52,11 +46,11 @@ export class FavoritesService {
       }),
       this.albumRepository.find({
         where: { id: In(albumsIds) },
-        relations: ['artist'], // Загружаем связь с артистом
+        relations: ['artist'],
       }),
       this.trackRepository.find({
         where: { id: In(tracksIds) },
-        relations: ['artist', 'album'], // Загружаем связи
+        relations: ['artist', 'album'],
       }),
     ]);
     return { artists, albums, tracks };
@@ -68,8 +62,6 @@ export class FavoritesService {
     tracks: any[];
   }> {
     const favorites = await this.getFavorites();
-// console.log('favorites', favorites)
-//     console.log()
     return {
       artists: favorites.artists.map(artist => ({
         id: artist.id,
@@ -157,15 +149,15 @@ export class FavoritesService {
   }
 
   async removeTrack(id: string): Promise<void> {
-    const favorites = await this.getOrCreateFavorites(); // берем всех фаворитов
-    const initialLength = favorites.tracks.length; //определяем их количество
+    const favorites = await this.getOrCreateFavorites();
+    const initialLength = favorites.tracks.length;
     console.log('favorites.artists.length', favorites.tracks.length)
-    favorites.tracks = favorites.tracks.filter(tracks => tracks !== id); //откидываем искомый
+    favorites.tracks = favorites.tracks.filter(tracks => tracks !== id);
 
-    if (favorites.tracks.length === initialLength) { // если количество не поменялось искомого нет
+    if (favorites.tracks.length === initialLength) {
       throw new NotFoundException('Track not found in favorites');
     }
 
-    await this.favoritesRepository.save(favorites); //пересохраняем
+    await this.favoritesRepository.save(favorites);
   }
 }

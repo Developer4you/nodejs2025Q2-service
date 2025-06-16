@@ -69,7 +69,7 @@ export class FavoritesController {
   @Delete('album/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeAlbum(@Param('id', new ParseUUIDPipe()) id: string) {
-    await this.service.removeAlbum(id); // Исправлено на removeAlbum
+    await this.service.removeAlbum(id);
   }
 
   @Post('track/:id')
