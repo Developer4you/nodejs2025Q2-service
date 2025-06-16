@@ -4,6 +4,7 @@ import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingService } from './logging/logging.service';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import {ConfigService} from "@nestjs/config";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

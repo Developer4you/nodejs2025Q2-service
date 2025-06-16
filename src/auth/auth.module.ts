@@ -14,12 +14,19 @@ import { Token } from './entities/token.entity';
         JwtModule.registerAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                secret: config.get('JWT_SECRET_KEY'),
-                signOptions: {
-                    expiresIn: config.get('TOKEN_EXPIRE_TIME'),
-                },
-            }),
+            useFactory: (config: ConfigService) => {
+                const secret = config.get<string>('JWT_SECRET_KEY');
+                const refreshSecret = config.get<string>('JWT_SECRET_REFRESH_KEY');
+
+                if (!secret || !refreshSecret) {
+                    throw new Error('JWT secrets are not configured');
+                }
+
+                return {
+                    secret,
+                    signOptions: { expiresIn: config.get('TOKEN_EXPIRE_TIME') },
+                };
+            },
         }),
     ],
     controllers: [AuthController],

@@ -98,20 +98,21 @@ export class AuthService {
     }
 
     private async generateTokens(userId: string, login: string): Promise<TokensDto> {
+        const accessSecret = this.configService.get('JWT_SECRET_KEY');
+        const refreshSecret = this.configService.get('JWT_SECRET_REFRESH_KEY');
+
+        if (!accessSecret || !refreshSecret) {
+            throw new Error('JWT secrets are not configured');
+        }
+
         const accessToken = this.jwtService.sign(
             { userId, login },
-            {
-                expiresIn: this.configService.get('TOKEN_EXPIRE_TIME'),
-                secret: this.configService.get('JWT_SECRET_KEY'),
-            },
+            { expiresIn: this.configService.get('TOKEN_EXPIRE_TIME'), secret: accessSecret }
         );
 
         const refreshToken = this.jwtService.sign(
             { userId, login },
-            {
-                expiresIn: this.configService.get('TOKEN_REFRESH_EXPIRE_TIME'),
-                secret: this.configService.get('JWT_SECRET_REFRESH_KEY'),
-            },
+            { expiresIn: this.configService.get('TOKEN_REFRESH_EXPIRE_TIME'), secret: refreshSecret }
         );
 
         const expiresAt = Date.now() +
